@@ -2,24 +2,24 @@
 version: '3.8'
 
 services:
-  api:
-    container_name: api
-    restart: always
-    build: .
-    ports:
-      - ${PORT}:${PORT}
-    depends_on:
-      - db
-    volumes:
-      - .:/usr/src/app
-    env_file:
-      - .env
+  # api:
+  #   container_name: api
+  #   restart: always
+  #   build: .
+  #   ports:
+  #     - ${PORT}:${PORT}
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - .:/usr/src/app
+  #   env_file:
+  #     - .env
 
   db:
     container_name: postgres
-    image: postgres
+    image: postgres:18
     ports:
-      - '5433:${DB_PORT}'
+      - '5432:${DB_PORT}'
     volumes:
       - data:/data/db
       - ./src/db:/docker-entrypoint-initdb.d

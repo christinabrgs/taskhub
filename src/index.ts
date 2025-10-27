@@ -1,34 +1,26 @@
-import express, {NextFunction, Request, Response} from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import dotenv from 'dotenv';
-import { Pool } from "pg";
+import { connectToDB } from "./db/connection"
+import workspaceRouter from './controllers/workspaceController';
+import taskRouter from './controllers/taskController';
 
 dotenv.config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "5432")
-});
 
-const connectToDB = async () => {
-  try {
-    await pool.connect();
-  } catch (err) {
-    console.log(err);
-  }
-};
 connectToDB();
 
-
 const app = express();
+app.use(express.json());
+app.use("/workspaces", workspaceRouter)
+app.use("/workspaces/:wsId/tasks", taskRouter)
 
-app.get("/test", (req: Request, res: Response, next: NextFunction) => { 
-res.send("Test endpoint is working!");
+app.get("/test", (req: Request, res: Response, next: NextFunction) => {
+  res.send("Test endpoint is working!");
 })
 
-app.listen(process.env.PORT, () => { 
+let port = process.env.PORT || 5000;
+
+app.listen(port, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 })
 

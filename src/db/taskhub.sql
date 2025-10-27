@@ -5,36 +5,37 @@ CREATE TYPE "status" AS ENUM (
 );
 
 CREATE TABLE "workspaces" (
-  "id" text PRIMARY KEY,
+  "id" serial PRIMARY KEY,
   "name" varchar NOT NULL
 );
 
 CREATE TABLE "tasks" (
-  "id" text PRIMARY KEY,
+  "id" serial PRIMARY KEY,
   "title" varchar NOT NULL,
   "description" text NOT NULL,
   "status" status NOT NULL,
   "due_date" timestamp,
-  "workspace_id" text NOT NULL,
-  "created_by" text NOT NULL
+  "workspace_id" integer NOT NULL,
+  "created_by" integer NOT NULL,
+  "deleted_at" timestamp NULL
 );
 
 CREATE TABLE "tags" (
-  "id" text PRIMARY KEY,
+  "id" serial PRIMARY KEY,
   "name" varchar NOT NULL,
-  "workspace_id" text NOT NULL,
+  "workspace_id" integer NOT NULL,
   UNIQUE ("name", "workspace_id")
 );
 
 CREATE TABLE "task_tags" (
-  "tag_id" text NOT NULL,
-  "task_id" text NOT NULL,
+  "tag_id" integer NOT NULL,
+  "task_id" integer NOT NULL,
   primary key ("tag_id", "task_id")
 );
 
 CREATE TABLE "api_keys" (
-  "id" text PRIMARY KEY,
-  "workspace_id" text NOT NULL,
+  "id" serial PRIMARY KEY,
+  "workspace_id" integer NOT NULL,
   "key" text NOT NULL,
   UNIQUE ("workspace_id", "key")
 );

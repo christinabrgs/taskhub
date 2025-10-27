@@ -1,0 +1,1 @@
+{"version":3,"file":"tagController.js","sourceRoot":"","sources":["../../src/controllers/tagController.ts"],"names":[],"mappings":";;AAEA,6BAAwB;AAExB,MAAM,SAAS,GAAG,OAAC,CAAC,MAAM,CAAC;IACzB,IAAI,EAAE,OAAC,CAAC,MAAM,EAAE,CAAC,GAAG,CAAC,CAAC,EAAE,sBAAsB,CAAC;IAC/C,WAAW,EAAE,OAAC,CAAC,MAAM,EAAE,CAAC,GAAG,CAAC,CAAC,EAAE,6BAA6B,CAAC;CAC9D,CAAC,CAAA"}
