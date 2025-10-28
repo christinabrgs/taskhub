@@ -40,15 +40,19 @@ CREATE TABLE "api_keys" (
   UNIQUE ("workspace_id", "key")
 );
 
+-- on delete cascade automatically removes dependent rows;
+ALTER TABLE "tags" ADD FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "tags" ADD FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id");
+ALTER TABLE "tasks" ADD FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "tasks" ADD FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id");
+ALTER TABLE "tasks" ADD FOREIGN KEY ("created_by") REFERENCES "api_keys" ("id") ON DELETE RESTRICT;
 
-ALTER TABLE "tasks" ADD FOREIGN KEY ("created_by") REFERENCES "api_keys" ("id");
+ALTER TABLE "task_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "task_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags" ("id");
+ALTER TABLE "task_tags" ADD FOREIGN KEY ("task_id") REFERENCES "tasks" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "task_tags" ADD FOREIGN KEY ("task_id") REFERENCES "tasks" ("id");
+ALTER TABLE "api_keys" ADD FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
 
-ALTER TABLE "api_keys" ADD FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id");
+
+
+

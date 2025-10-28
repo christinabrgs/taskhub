@@ -5,14 +5,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateApiKey = validateApiKey;
 const connection_1 = __importDefault(require("../db/connection"));
+const crypto_1 = __importDefault(require("crypto"));
 async function validateApiKey(req, res, next) {
     try {
         const apiKey = req.headers['x-api-key'];
-        if (!apiKey || typeof apiKey !== 'string') {
-            return res.status(401).json({ error: 'Missing or invalid API key' });
+        const wsId = Number(req.params.wsId);
+        if (!apiKey) {
+            return res.status(401).json({ error: 'Missing API key' });
         }
+        if (typeof apiKey !== 'string') {
+            return res.status(401).json({ error: 'API key is not of type String' });
+        }
+        const key = crypto_1.default.createHash('sha256').update(apiKey).digest('hex'); // using lower saltOrRounds value to ensure faster processing 
+        console.log(apiKey, key);
         // Find API key in DB
-        const apiKeyRecord = await connection_1.default.query(`SELECT id, workspace_id FROM api_keys WHERE key = $1 & workspace_id = $2`, [apiKey, req.params.wsId]);
+        const apiKeyRecord = await connection_1.default.query(`SELECT id, workspace_id FROM api_keys WHERE key = $1 AND workspace_id = $2`, [key, wsId]);
         if (apiKeyRecord.rowCount === 0) {
             return res.status(401).json({ error: 'Invalid API key' });
         }

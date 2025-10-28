@@ -1,20 +1,28 @@
 
 import { type Request, type Response, type NextFunction } from 'express';
 import db from '../db/connection';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export async function validateApiKey(req: Request, res: Response, next: NextFunction) {
   try {
-    const apiKey = String(req.headers['x-api-key'])
+    const apiKey = req.headers['x-api-key']
     const wsId = Number(req.params.wsId)
 
-    if (!apiKey || typeof apiKey !== 'string') {
-      return res.status(401).json({ error: 'Missing or invalid API key' })
+    if (!apiKey) {
+      return res.status(401).json({ error: 'Missing API key' })
     }
 
+    if (typeof apiKey !== 'string') {
+      return res.status(401).json({ error: 'API key is not of type String' })
+    }
+
+    const key = crypto.createHash('sha256').update(apiKey).digest('hex') // using lower saltOrRounds value to ensure faster processing 
+    console.log(apiKey, key)
     // Find API key in DB
     const apiKeyRecord = await db.query(
       `SELECT id, workspace_id FROM api_keys WHERE key = $1 AND workspace_id = $2`,
-      [apiKey, wsId]
+      [key, wsId]
     )
 
     if (apiKeyRecord.rowCount === 0) {

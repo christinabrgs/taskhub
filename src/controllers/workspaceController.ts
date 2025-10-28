@@ -36,7 +36,8 @@ async function generateAPIKey(req: Request, res: Response) {
   if (!workspace.rows.length) return res.status(404).json({ error: "Workspace not found" })
 
   const body = crypto.randomBytes(16).toString("hex") + wsId
-  const key = bcrypt.hash(body, 5) // using lower saltOrRounds value to ensure faster processing 
+  const key = await crypto.createHash('sha256').update(body).digest('hex')
+  console.log(body, key)
 
   try {
     const result = await db.query(

@@ -19,6 +19,16 @@ const partialTaskUpdateSchema = zod_1.z.object({
     status: zod_1.z.enum(['todo', 'in_progress', 'done']).default('todo').optional(),
     dueDate: zod_1.z.coerce.date().optional(),
 });
+const tagSchema = zod_1.z.object({
+    name: zod_1.z.string().min(1, "name cannot be empty"),
+});
+const taskListSchema = zod_1.z.object({
+    q: zod_1.z.string().optional(),
+    status: zod_1.z.enum(['todo', 'in_progress', 'done']).optional(),
+    due_before: zod_1.z.string().optional(),
+    cursor: zod_1.z.string().optional(),
+    limit: zod_1.z.coerce.number().min(1).max(100).optional(),
+});
 async function createTask(req, res) {
     const wsId = Number(req.params.wsId);
     const { id: apiKey } = res.locals.apiKey;
@@ -36,10 +46,40 @@ async function createTask(req, res) {
     }
 }
 async function getTasks(req, res) {
+    const { status, due_before, q, cursor, limit } = taskListSchema.parse(req.query);
     const wsId = Number(req.params.wsId);
+    let query = "SELECT tasks.*, tags.name as tag_names FROM tasks LEFT JOIN task_tags ON task_tags.task_id = tasks.id LEFT JOIN tags ON task_tags.tag_id = tags.id WHERE tasks.workspace_id = $1 AND deleted_at IS NULL";
+    // I should probably have an actual type here, but this works in the mean time
+    let values = [wsId];
+    let index = 2;
+    if (status) {
+        query += ` AND tasks.status = $${index}`;
+        values.push(status);
+        index++;
+    }
+    if (due_before) {
+        query += ` AND tasks.due_date < $${index}`;
+        values.push(due_before);
+        index++;
+    }
+    if (q) {
+        query += ` AND (tasks.title ILIKE $${index} OR tasks.description ILIKE $${index})`;
+        values.push(`%${q}%`);
+        index++;
+    }
+    if (cursor) {
+        query += ` AND tasks.id > $${index}`;
+        values.push(cursor);
+        index++;
+    }
+    values.push(limit || 10);
     try {
-        const result = await connection_1.default.query("SELECT * FROM tasks WHERE workspace_id = $1 AND deleted_at IS NULL ORDER BY due_date ASC", [wsId]);
-        res.status(201).json({ tasks: result.rows });
+        let cursor = null;
+        const result = await connection_1.default.query(query + ` GROUP BY tasks.id, tags.name ORDER BY tasks.id ASC LIMIT $${index};`, values);
+        if (result.rows.length === limit) {
+            cursor = result.rows[result.rows.length - 1].id;
+        }
+        res.status(201).json({ tasks: result.rows, cursor });
     }
     catch (error) {
         if (error instanceof zod_1.z.ZodError) {
@@ -80,7 +120,7 @@ async function updateTask(req, res) {
         idx++;
     }
     values.push(taskId);
-    const query = `UPDATE tasks SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${idx} AND workspace_id = $${idx + 1} RETURNING *`;
+    const query = `UPDATE tasks SET ${fields.join(', ')} WHERE id = $${idx} AND workspace_id = $${idx + 1} RETURNING *`;
     values.push(wsId);
     try {
         const result = await connection_1.default.query(query, values);
@@ -95,11 +135,35 @@ async function updateTask(req, res) {
         res.status(500).json({ error: 'Internal server error' });
     }
 }
+async function attachTagToTask(req, res) {
+    const wsId = Number(req.params.wsId);
+    const taskId = Number(req.params.taskId);
+    const name = req.params.name;
+    const body = tagSchema.parse({ name });
+    try {
+        // check if tag exists, if it doesn't create it
+        const tagQuery = await connection_1.default.query(`INSERT INTO tags (name, workspace_id) VALUES ($1, $2) ON CONFLICT (name, workspace_id) DO UPDATE SET name = EXCLUDED.name RETURNING *;`, [body.name, wsId]);
+        if (!tagQuery.rows[0]) {
+            return res.status(404).json({ error: "Tag not found" });
+        }
+        const tag = tagQuery.rows[0];
+        const result = await connection_1.default.query(`INSERT INTO task_tags (tag_id, task_id) VALUES ($1, $2) ON CONFLICT (tag_id, task_id) DO UPDATE SET tag_id = EXCLUDED.tag_id RETURNING *;`, [tag.id, taskId]);
+        res.status(201).json({ taskTag: result.rows[0] });
+    }
+    catch (error) {
+        if (error instanceof zod_1.z.ZodError) {
+            return res.status(400).json({ error: error.issues });
+        }
+        console.error('Error attaching tag to task:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 // Routers
 const taskRouter = (0, express_1.Router)({ mergeParams: true });
 taskRouter.post("/", validateAPIKey_1.validateApiKey, createTask);
 taskRouter.get("/", validateAPIKey_1.validateApiKey, getTasks);
 taskRouter.delete("/:taskId", validateAPIKey_1.validateApiKey, deleteTask);
 taskRouter.patch('/:taskId', validateAPIKey_1.validateApiKey, updateTask);
+taskRouter.post('/:taskId/tags/:name', validateAPIKey_1.validateApiKey, attachTagToTask);
 exports.default = taskRouter;
 //# sourceMappingURL=taskController.js.map
