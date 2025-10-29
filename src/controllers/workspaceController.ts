@@ -32,14 +32,15 @@ async function createWorkspace(req: Request, res: Response) {
 async function generateAPIKey(req: Request, res: Response) {
   const wsId = Number(req.params.wsId)
 
-  const workspace = await db.query("SELECT * FROM workspaces WHERE id = $1", [wsId])
-  if (!workspace.rows.length) return res.status(404).json({ error: "Workspace not found" })
 
   const body = crypto.randomBytes(16).toString("hex") + wsId
   const key = await crypto.createHash('sha256').update(body).digest('hex')
-  console.log(body, key)
 
   try {
+
+    const workspace = await db.query("SELECT * FROM workspaces WHERE id = $1", [wsId])
+    if (!workspace.rows.length) return res.status(404).json({ error: "Workspace not found" })
+
     const result = await db.query(
       "INSERT into api_keys (workspace_id, key) VALUES ($1, $2) RETURNING id",
       [wsId, key]
@@ -52,11 +53,42 @@ async function generateAPIKey(req: Request, res: Response) {
   }
 }
 
+async function getStatsForWorkspace(req: Request, res: Response) {
+  const wsId = Number(req.params.wsId)
+  try {
+    // count by status
+    const countStatus = await db.query(
+      "SELECT status, COUNT(*) FROM tasks WHERE workspace_id = $1 GROUP BY status",
+      [wsId]
+    )
+    if (countStatus.rows.length === 0) res.status(404).json({ error: "no tasks available" })
+
+    const topTags = await db.query(
+      "SELECT t.name, COUNT(*) as tag_count FROM task_tags tt JOIN tags t ON tt.tag_id = t.id JOIN tasks ta ON tt.task_id = ta.id WHERE ta.workspace_id = $1 GROUP BY t.name ORDER BY tag_count DESC LIMIT 5",
+      [wsId]
+    )
+
+    const overdueTasks = await db.query(
+      "SELECT COUNT(*) FROM tasks WHERE workspace_id = $1 AND due_date < NOW() AND status != 'done'",
+      [wsId]
+    )
+
+    res.status(200).json({ stats: countStatus.rows, topTags: topTags.rows, overdueTasks: overdueTasks.rows[0].count })
+
+  } catch (error) {
+    console.error('Error getting stats for workspace', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+
+}
+
+
 // Routers
 
 const workspaceRouter = Router()
 
 workspaceRouter.post("/", createWorkspace)
 workspaceRouter.post("/:wsId/apikeys", generateAPIKey)
+workspaceRouter.get("/:wsId/stats", getStatsForWorkspace)
 
 export default workspaceRouter
