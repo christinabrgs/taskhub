@@ -205,29 +205,29 @@ If the project evolved toward TypeScript-native queries, I would implement Drizz
 ------
 
 ## Future Enhancements
-
+- Implement / Expand testing
+- add linting and autocode formating
 - Implement invalidation for keys
-- Add stats endpoint
 - Add Drizzle migrations
 - Introduce consistent error constants
-- Implement / Expand testing
-- Tag: Filter by tag name
 
 ------
 
 ## Deployment Plan (AWS)
 
-Deploying using AWS, I would most likely use ECS for container management similar to Docker.  I am not too familiar with AWS Services, I would consult with a more senior engineer to implement a plan for deployment.
+For deployment, I would likely use AWS ECS for container management, similar to Docker. I’d also consider Amazon RDS for a managed PostgreSQL database. To monitor API performance and requests, I’d implement Amazon CloudWatch, and potentially use API Gateway for more detailed logging and analytics.
+
+Though this is based off research of different amazon services as I don't yet have direct hands-on experience with AWS Services, ideally I would consult with a more senior engineer to implement a solid plan for deployment.
 
 ------
 
 ## AI Usage
 
-enjoy my chaotic convos
+enjoy my chaotic convos with chatGPT
 
 https://docs.google.com/document/d/19QbxfJYBYMz8zpZb4umo3wmjE7COgOXq3TkbS0LgSg4/edit?usp=sharing
 https://docs.google.com/document/d/1fSgciyRmGzzw7PejWfTR-SWhVRxooYBNoY2zakU39CM/edit?usp=sharing
 
-
+Additionally, I added transcripts of convos with OpenCode in Markdown format to the root directory created by OpenCode
 
 ##### 
