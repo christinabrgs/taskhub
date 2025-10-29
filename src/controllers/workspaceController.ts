@@ -37,7 +37,8 @@ async function generateAPIKey(req: Request, res: Response) {
   const key = await crypto.createHash('sha256').update(body).digest('hex')
 
   try {
-
+    // in both generateAPIKey and getStatsForWorkspace we are doing additional querying that might cause issues with performance, for now it works
+    // ideally we would create more extensive error handling in the catch blocks based on unique instances
     const workspace = await db.query("SELECT * FROM workspaces WHERE id = $1", [wsId])
     if (!workspace.rows.length) return res.status(404).json({ error: "Workspace not found" })
 
@@ -56,12 +57,14 @@ async function generateAPIKey(req: Request, res: Response) {
 async function getStatsForWorkspace(req: Request, res: Response) {
   const wsId = Number(req.params.wsId)
   try {
-    // count by status
+
+    const workspace = await db.query("SELECT * FROM workspaces WHERE id = $1", [wsId])
+    if (!workspace.rows.length) return res.status(404).json({ error: "Workspace not found" })
+
     const countStatus = await db.query(
       "SELECT status, COUNT(*) FROM tasks WHERE workspace_id = $1 GROUP BY status",
       [wsId]
     )
-    if (countStatus.rows.length === 0) res.status(404).json({ error: "no tasks available" })
 
     const topTags = await db.query(
       "SELECT t.name, COUNT(*) as tag_count FROM task_tags tt JOIN tags t ON tt.tag_id = t.id JOIN tasks ta ON tt.task_id = ta.id WHERE ta.workspace_id = $1 GROUP BY t.name ORDER BY tag_count DESC LIMIT 5",
