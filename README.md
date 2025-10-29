@@ -228,6 +228,6 @@ enjoy my chaotic convos with chatGPT
 https://docs.google.com/document/d/19QbxfJYBYMz8zpZb4umo3wmjE7COgOXq3TkbS0LgSg4/edit?usp=sharing
 https://docs.google.com/document/d/1fSgciyRmGzzw7PejWfTR-SWhVRxooYBNoY2zakU39CM/edit?usp=sharing
 
-Additionally, I added transcripts of convos with OpenCode in Markdown format to the root directory created by OpenCode
+Additionally, I added transcripts of convos with OpenCode in Markdown format to the root directory
 
 ##### 
