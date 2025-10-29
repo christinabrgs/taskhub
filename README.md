@@ -198,7 +198,7 @@ Jest is configured for unit and integration testing. Testing is not yet implemen
 
 ### API Testing Script
 
-A comprehensive API testing script is available at `test_api.sh` to test all endpoints:
+A temporary API testing script is available at `test_api.sh` to test all endpoints:
 
 ```bash
 # Make the script executable
@@ -217,15 +217,6 @@ chmod +x test_api.sh
 - Tests tag operations and tag-based filtering
 - Tests workspace statistics
 - Verifies soft delete functionality
-
-**Features:**
-- Automatically extracts workspace ID, task IDs, and API key from responses
-- Uses proper authentication headers (`x-api-key`)
-- Provides color-coded output for success/failure
-- Includes comprehensive error handling
-- Tests both success and error scenarios
-
-This script serves as both a testing tool and API usage documentation.
 
 ------
 
