@@ -151,14 +151,14 @@ API available at **http://localhost:5000**
 - `POST /workspaces/:wsId/tasks` – Create a task
 
   Request Body:
-
+ ```
   {
     "title": "Implement user authentication",
     "description": "Add login and registration endpoints",
     "status": "todo",
     "dueDate": "2024-12-31"
   }
-
+ ```
 - `GET /workspaces/:wsId/tasks` – List tasks (supports filters and pagination)
 
   **Query Parameters:**
@@ -172,12 +172,12 @@ API available at **http://localhost:5000**
 - `PATCH /workspaces/:wsId/tasks/:taskId` – Partially update a task
 
   Request Body:
-
+ ```
   {
     "status": "in_progress",
     "title": "Updated title"
   }`
-
+ ```
 - `DELETE /workspaces/:wsId/tasks/:taskId` – Soft delete
 
 - `POST /workspaces/:wsId/tasks/:taskId/tags/:name` – Attach tag to a task
@@ -188,13 +188,13 @@ API available at **http://localhost:5000**
 
 ### Stats
 
-- `GET /workspaces/:wsId/stats` – Not implemented; designed for counts by status, top tags, and overdue tasks.
+- `GET /workspaces/:wsId/stats` – 
 
 ------
 
 ## Testing
 
-Jest is configured for unit and integration testing. Testing is not implemented.
+Jest is configured for unit and integration testing. Testing is not yet implemented.
 
 ------
 
@@ -205,6 +205,7 @@ If the project evolved toward TypeScript-native queries, I would implement Drizz
 ------
 
 ## Future Enhancements
+- create seed data
 - Implement / Expand testing
 - add linting and autocode formating
 - Implement invalidation for keys
