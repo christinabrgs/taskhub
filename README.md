@@ -196,6 +196,37 @@ API available at **http://localhost:5000**
 
 Jest is configured for unit and integration testing. Testing is not yet implemented.
 
+### API Testing Script
+
+A comprehensive API testing script is available at `test_api.sh` to test all endpoints:
+
+```bash
+# Make the script executable
+chmod +x test_api.sh
+
+# Run the API tests (ensure server is running on port 5000)
+./test_api.sh
+```
+
+**What the script tests:**
+- Creates a workspace and generates API key
+- Creates 6 diverse tasks with different statuses and due dates
+- Creates 4 tags (urgent, bug, feature, documentation) and attaches them to tasks
+- Tests all CRUD operations for tasks
+- Tests filtering, pagination, and search functionality
+- Tests tag operations and tag-based filtering
+- Tests workspace statistics
+- Verifies soft delete functionality
+
+**Features:**
+- Automatically extracts workspace ID, task IDs, and API key from responses
+- Uses proper authentication headers (`x-api-key`)
+- Provides color-coded output for success/failure
+- Includes comprehensive error handling
+- Tests both success and error scenarios
+
+This script serves as both a testing tool and API usage documentation.
+
 ------
 
 ## Migrations

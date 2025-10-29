@@ -2,8 +2,7 @@ import db from '../db/connection';
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
-
+import { validateApiKey } from '../middleware/validateAPIKey';
 
 const workspaceSchema = z.object({
   name: z.string().min(1, 'Workspace name cannot be empty')
@@ -92,6 +91,6 @@ const workspaceRouter = Router()
 
 workspaceRouter.post("/", createWorkspace)
 workspaceRouter.post("/:wsId/apikeys", generateAPIKey)
-workspaceRouter.get("/:wsId/stats", getStatsForWorkspace)
+workspaceRouter.get("/:wsId/stats", validateApiKey, getStatsForWorkspace)
 
 export default workspaceRouter

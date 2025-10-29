@@ -137,7 +137,7 @@ async function deleteTask(req: Request, res: Response) {
   try {
     const result = await db.query(
       "SELECT * FROM tasks WHERE id = $1 AND workspace_id = $2 AND deleted_at IS NULL",
-      [wsId, taskId]
+      [taskId, wsId]
     )
 
     result.rows.length === 0 && res.status(404).json({ error: "Task not found" })
