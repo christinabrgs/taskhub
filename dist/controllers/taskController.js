@@ -28,6 +28,7 @@ const taskListSchema = zod_1.z.object({
     due_before: zod_1.z.string().optional(),
     cursor: zod_1.z.string().optional(),
     limit: zod_1.z.coerce.number().min(1).max(100).optional(),
+    tag: zod_1.z.string().optional(),
 });
 async function createTask(req, res) {
     const wsId = Number(req.params.wsId);
@@ -46,9 +47,9 @@ async function createTask(req, res) {
     }
 }
 async function getTasks(req, res) {
-    const { status, due_before, q, cursor, limit } = taskListSchema.parse(req.query);
+    const { status, due_before, q, cursor, limit, tag } = taskListSchema.parse(req.query);
     const wsId = Number(req.params.wsId);
-    let query = "SELECT tasks.*, tags.name as tag_names FROM tasks LEFT JOIN task_tags ON task_tags.task_id = tasks.id LEFT JOIN tags ON task_tags.tag_id = tags.id WHERE tasks.workspace_id = $1 AND deleted_at IS NULL";
+    let query = "SELECT tasks.*, array_agg(tags.name) as tag_names FROM tasks LEFT JOIN task_tags ON task_tags.task_id = tasks.id LEFT JOIN tags ON task_tags.tag_id = tags.id WHERE tasks.workspace_id = $1 AND deleted_at IS NULL";
     // I should probably have an actual type here, but this works in the mean time
     let values = [wsId];
     let index = 2;
@@ -72,10 +73,20 @@ async function getTasks(req, res) {
         values.push(cursor);
         index++;
     }
+    if (tag) {
+        query += ` AND tasks.id IN (
+       SELECT DISTINCT tt.task_id
+       FROM task_tags tt
+       JOIN tags t ON tt.tag_id = t.id
+       WHERE t.name = $${index}
+     )`;
+        values.push(tag);
+        index++;
+    }
     values.push(limit || 10);
     try {
         let cursor = null;
-        const result = await connection_1.default.query(query + ` GROUP BY tasks.id, tags.name ORDER BY tasks.id ASC LIMIT $${index};`, values);
+        const result = await connection_1.default.query(query + ` GROUP BY tasks.id ORDER BY tasks.id ASC LIMIT $${index};`, values);
         if (result.rows.length === limit) {
             cursor = result.rows[result.rows.length - 1].id;
         }

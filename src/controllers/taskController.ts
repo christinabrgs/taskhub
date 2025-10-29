@@ -28,6 +28,7 @@ const taskListSchema = z.object({
   due_before: z.string().optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).optional(),
+  tag: z.string().optional(),
 })
 
 
@@ -58,7 +59,7 @@ async function createTask(req: Request, res: Response) {
 
 async function getTasks(req: Request, res: Response) {
 
-  const { status, due_before, q, cursor, limit } = taskListSchema.parse(req.query)
+  const { status, due_before, q, cursor, limit, tag } = taskListSchema.parse(req.query)
   const wsId = Number(req.params.wsId)
 
   let query = "SELECT tasks.*, array_agg(tags.name) as tag_names FROM tasks LEFT JOIN task_tags ON task_tags.task_id = tasks.id LEFT JOIN tags ON task_tags.tag_id = tags.id WHERE tasks.workspace_id = $1 AND deleted_at IS NULL"
@@ -88,6 +89,18 @@ async function getTasks(req: Request, res: Response) {
   if (cursor) {
     query += ` AND tasks.id > $${index}`
     values.push(cursor)
+    index++
+  }
+
+  if (tag) {
+    // not the best approach for performance, considering we are doing a query within a query, but it works for now
+    query += ` AND tasks.id IN (
+       SELECT DISTINCT tt.task_id
+       FROM task_tags tt
+       JOIN tags t ON tt.tag_id = t.id
+       WHERE t.name = $${index}
+     )`
+    values.push(tag)
     index++
   }
 
