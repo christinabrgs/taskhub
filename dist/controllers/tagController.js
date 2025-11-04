@@ -11,12 +11,13 @@ const tagSchema = zod_1.z.object({
     name: zod_1.z.string().min(1, "name cannot be empty"),
 });
 async function upsertTag(req, res) {
-    const wsId = Number(req.params.wsId);
+    // TODO: Same suggestions as the other two controller about checking the number, typing,
+    const wsId = res.locals.wsId;
     const name = req.params.name;
     const body = tagSchema.parse({ name });
     try {
         const result = await connection_1.default.query(
-        // best practice here would be to do nothing but when a value exists, the tag does not return the row in the response, so for clarity in the output, we are updating the name to itself
+        // logical thing to do here would be to DO NOTHING but we want to return the value
         `INSERT INTO tags (name, workspace_id) VALUES ($1, $2) ON CONFLICT (name, workspace_id) DO UPDATE SET name = EXCLUDED.name RETURNING *;`, [body.name, wsId]);
         res.status(201).json({ tag: result.rows[0] });
     }

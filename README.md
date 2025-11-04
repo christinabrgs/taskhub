@@ -1,15 +1,15 @@
 # TaskHub – REST API for Task Management
 
 TaskHub is a REST API for managing tasks, tags, and workspaces secured by API key authentication.
- It’s built with Node.js, TypeScript, Express, and PostgreSQL.
+It’s built with Node.js, TypeScript, Express, and PostgreSQL.
 
-------
+---
 
 ## Overview
 
-TaskHub organizes tasks within isolated workspaces. Each workspace supports multiple API keys for flexible access. The API includes task management, tagging, filtering, and pagination. 
+TaskHub organizes tasks within isolated workspaces. Each workspace supports multiple API keys for flexible access. The API includes task management, tagging, filtering, and pagination.
 
-------
+---
 
 ## Tech Stack
 
@@ -22,16 +22,16 @@ TaskHub organizes tasks within isolated workspaces. Each workspace supports mult
 - **Testing:** Jest
 - **Containerization:** Docker & Docker Compose
 
-------
+---
 
 ## Key Design Decisions
 
 ### API Key Authentication
 
 **Relationship:** One-to-many (multiple keys per workspace)
- **Reasoning:** Allows separate applications or users to connect with unique credentials.
+**Reasoning:** Allows separate applications or users to connect with unique credentials.
 API keys are hashed with SHA-256 before storage for security.
-While key rotation and invalidation weren’t implemented due to time constraints, a more fleshed out design would include invalidation allowing users to revoke keys when needed. 
+While key rotation and invalidation weren’t implemented due to time constraints, a more fleshed out design would include invalidation allowing users to revoke keys when needed.
 
 Additionally, an expire_at field could be used to automatically expire keys after a set period, ensuring that inactive keys don’t remain valid indefinitely and users are forced to generate a new key.
 
@@ -39,10 +39,10 @@ Additionally, an expire_at field could be used to automatically expire keys afte
 
 A key-set cursor-based pagination was included for listing the tasks for simplicity and considering time restraints, a more complete build would have used opaque tokens for better security and abstraction over raw IDs.
 
-### Data Validation 
+### Data Validation
 
 Zod provides type-safe validation and clear error messages for clients.
- It ensures that invalid inputs are caught early and communicated effectively.
+It ensures that invalid inputs are caught early and communicated effectively.
 
 ## Logging
 
@@ -69,7 +69,7 @@ Zod error responses specify which fields failed validation.
 
 In a production setting, I would define error constants to ensure consistent error handling across controllers.
 
-------
+---
 
 ## Database Schema
 
@@ -83,7 +83,7 @@ workspaces (id, name)
  └── task_tags (tag_id, task_id) [many-to-many]
 ```
 
-------
+---
 
 ## Local Development Setup
 
@@ -113,7 +113,7 @@ DB_PORT=5432
 git clone <repository-url>
 cd taskhub
 
-# Install dependencies 
+# Install dependencies
 npm install
 
 # Start Database in Docker Container
@@ -125,12 +125,15 @@ docker-compose up
 
 # Start server
 npm run dev
+
+# Run tests
+npm run test
 ```
 
-API available at **http://localhost:5000**
- pgAdmin available at **http://localhost:5050**
+API available at **<http://localhost:5000>**
+pgAdmin available at **<http://localhost:5050>**
 
-------
+---
 
 ## Endpoints (Summary)
 
@@ -140,9 +143,15 @@ API available at **http://localhost:5000**
 
   Request Body:
 
+  
+
+  ```
   {
-    "name": "My Workspace"
+  "name": "My Workspace"
   }
+  ```
+
+  
 
 - `POST /workspaces/:wsId/apikeys` – Generate an API key
 
@@ -151,14 +160,16 @@ API available at **http://localhost:5000**
 - `POST /workspaces/:wsId/tasks` – Create a task
 
   Request Body:
- ```
-  {
-    "title": "Implement user authentication",
-    "description": "Add login and registration endpoints",
-    "status": "todo",
-    "dueDate": "2024-12-31"
-  }
- ```
+
+```
+ {
+   "title": "Implement user authentication",
+   "description": "Add login and registration endpoints",
+   "status": "todo",
+   "dueDate": "2024-12-31"
+ }
+```
+
 - `GET /workspaces/:wsId/tasks` – List tasks (supports filters and pagination)
 
   **Query Parameters:**
@@ -172,12 +183,14 @@ API available at **http://localhost:5000**
 - `PATCH /workspaces/:wsId/tasks/:taskId` – Partially update a task
 
   Request Body:
- ```
-  {
-    "status": "in_progress",
-    "title": "Updated title"
-  }`
- ```
+
+```
+ {
+   "status": "in_progress",
+   "title": "Updated title"
+ }`
+```
+
 - `DELETE /workspaces/:wsId/tasks/:taskId` – Soft delete
 
 - `POST /workspaces/:wsId/tasks/:taskId/tags/:name` – Attach tag to a task
@@ -188,13 +201,15 @@ API available at **http://localhost:5000**
 
 ### Stats
 
-- `GET /workspaces/:wsId/stats` – 
+- `GET /workspaces/:wsId/stats` – get basic stats for workspace tasks and tags
 
-------
+---
 
 ## Testing
 
-Jest is configured for unit and integration testing. Testing is not yet implemented.
+Jest & SuperTest is configured for unit and integration testing.
+
+Update: 11.03 you can now run tests with "npm run dev"
 
 ### API Testing Script
 
@@ -209,6 +224,7 @@ chmod +x test_api.sh
 ```
 
 **What the script tests:**
+
 - Creates a workspace and generates API key
 - Creates 6 diverse tasks with different statuses and due dates
 - Creates 4 tags (urgent, bug, feature, documentation) and attaches them to tasks
@@ -218,23 +234,26 @@ chmod +x test_api.sh
 - Tests workspace statistics
 - Verifies soft delete functionality
 
-------
+---
 
 ## Migrations
 
 If the project evolved toward TypeScript-native queries, I would implement Drizzle, a more modern ORM and migration tool. The API and tooling is very slick and easy to use, and the documentation is top notch.
 
-------
+---
 
 ## Future Enhancements
+
 - create seed data
-- Implement / Expand testing
-- add linting and autocode formating
 - Implement invalidation for keys
 - Add Drizzle migrations
 - Introduce consistent error constants
 
-------
+
+
+- add API service back to docker-compose file
+
+---
 
 ## Deployment Plan (AWS)
 
@@ -242,15 +261,15 @@ For deployment, I would likely use AWS ECS for container management, similar to 
 
 Though this is based off research of different amazon services as I don't yet have direct hands-on experience with AWS Services, ideally I would consult with a more senior engineer to implement a solid plan for deployment.
 
-------
+---
 
 ## AI Usage
 
 enjoy my chaotic convos with chatGPT
 
-https://docs.google.com/document/d/19QbxfJYBYMz8zpZb4umo3wmjE7COgOXq3TkbS0LgSg4/edit?usp=sharing
-https://docs.google.com/document/d/1fSgciyRmGzzw7PejWfTR-SWhVRxooYBNoY2zakU39CM/edit?usp=sharing
+<https://docs.google.com/document/d/19QbxfJYBYMz8zpZb4umo3wmjE7COgOXq3TkbS0LgSg4/edit?usp=sharing>
+<https://docs.google.com/document/d/1fSgciyRmGzzw7PejWfTR-SWhVRxooYBNoY2zakU39CM/edit?usp=sharing>
 
 Additionally, I added transcripts of convos with OpenCode in Markdown format to the root directory
 
-##### 
+#####

@@ -1,1 +1,1 @@
-{"version":3,"file":"workspaceController.d.ts","sourceRoot":"","sources":["../../src/controllers/workspaceController.ts"],"names":[],"mappings":"AAwDA,QAAA,MAAM,eAAe,4CAAW,CAAA;AAKhC,eAAe,eAAe,CAAA"}
+{"version":3,"file":"workspaceController.d.ts","sourceRoot":"","sources":["../../src/controllers/workspaceController.ts"],"names":[],"mappings":"AAgGA,QAAA,MAAM,eAAe,4CAAW,CAAC;AAWjC,eAAe,eAAe,CAAC"}
