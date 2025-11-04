@@ -51,9 +51,17 @@ async function generateAPIKey(_req: Request, res: Response) {
   }
 }
 
+// apply instance of databaseError for workspace not found
+// will need to fix test for get stats
 async function getStatsForWorkspace(_req: Request, res: Response) {
   try {
     const wsId = res.locals.wsId;
+
+    const workspace = await db.query("SELECT * FROM workspaces WHERE id = $1", [
+      wsId,
+    ]);
+    if (!workspace.rows.length)
+      return res.status(404).json({ error: "Workspace not found" });
 
     const countStatus = await db.query(
       "SELECT status, COUNT(*) FROM tasks WHERE workspace_id = $1 GROUP BY status",
@@ -78,11 +86,6 @@ async function getStatsForWorkspace(_req: Request, res: Response) {
         overdueTasks: overdueTasks.rows[0].count,
       });
   } catch (error) {
-
-    if (error instanceof DatabaseError && error.code === "23503") {
-      return res.status(404).json({ error: "Workspace not found" });
-    }
-
     console.error("Error getting stats for workspace", error);
     res.status(500).json({ error: "Internal server error" });
   }
