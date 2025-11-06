@@ -63,6 +63,7 @@ async function getTasks(req: Request, res: Response) {
 
   const wsId = res.locals.wsId;
 
+  // aggrigating multiple rows of tags to an array and returning one row
   let query =
     "SELECT tasks.*, array_agg(tags.name) as tag_names FROM tasks LEFT JOIN task_tags ON task_tags.task_id = tasks.id LEFT JOIN tags ON task_tags.tag_id = tags.id WHERE tasks.workspace_id = $1 AND deleted_at IS NULL";
 
@@ -122,7 +123,7 @@ async function getTasks(req: Request, res: Response) {
 
     res.status(200).json({ tasks: result.rows, cursor });
   } catch (error) {
-    console.error("Error creating task:", error);
+    console.error("Error getting task:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 }

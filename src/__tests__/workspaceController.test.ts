@@ -172,28 +172,13 @@ describe("Workspace Controller", () => {
       expect(response.body.overdueTasks).toBe("2");
     });
 
-    it("should return 404 for non-existent workspace", async () => {
-      mockQuery.mockImplementation((query: string, _params: any[]) => {
-        // API key validation should pass
-        if (query.includes("SELECT id, workspace_id FROM api_keys")) {
-          return Promise.resolve({
-            rows: [{ id: 1, workspace_id: mockWorkspaceId }],
-            rowCount: 1,
-          });
-        }
-        // Workspace lookup should fail
-        if (query.includes("SELECT * FROM workspaces WHERE id = $1")) {
-          return Promise.resolve({
-            rows: [],
-            rowCount: 0,
-          });
-        }
-        return Promise.resolve({ rows: [], rowCount: 0 });
-      });
 
-      const response = await request(app)
-        .get(`/workspaces/${mockWorkspaceId}/stats`)
-        .set("x-api-key", mockApiKey);
+    it("should return 404 for non-existent workspace", async () => {
+      const err = new DatabaseError("fk constraint error I guess", 69, "error")
+      err.code = '23503'
+      mockQuery.mockRejectedValueOnce(err);
+
+      const response = await request(app).post("/workspaces/999/apikeys");
 
       expect(response.status).toBe(404);
       expect(response.body.error).toBe("Workspace not found");
