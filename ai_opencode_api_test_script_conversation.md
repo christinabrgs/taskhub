@@ -15,6 +15,7 @@ I analyzed the TaskHub codebase to understand the available API endpoints by exa
 - `package.json` - Project dependencies and scripts
 
 **Identified Endpoints:**
+
 - Workspaces: POST /workspaces, POST /workspaces/:wsId/apikeys, GET /workspaces/:wsId/stats
 - Tasks: POST, GET, PATCH, DELETE /workspaces/:wsId/tasks, POST /workspaces/:wsId/tasks/:taskId/tags/:name
 - Tags: PUT /workspaces/:wsId/tags/:name
@@ -23,6 +24,7 @@ I analyzed the TaskHub codebase to understand the available API endpoints by exa
 ## Initial Implementation
 
 Created `test_api.sh` with:
+
 - Color-coded output functions
 - Separate functions for authenticated and non-authenticated requests
 - All endpoints with sample data
@@ -32,9 +34,11 @@ Created `test_api.sh` with:
 ## User Feedback and Iterations
 
 ### Request 1: API Key Integration
+
 **User:** all tests after #3 should use the api key returned from #3 Generate API key. this is set via the header "x-api-key: API_KEY"
 
 **Changes Made:**
+
 - Modified script to extract API key from response using `jq`
 - Updated header format from "X-API-Key" to "x-api-key" (lowercase)
 - Added dynamic workspace ID extraction
@@ -42,9 +46,11 @@ Created `test_api.sh` with:
 - Improved error handling for ID extraction failures
 
 ### Request 2: Enhanced Test Coverage
+
 **User:** can you create 6 tasks instead of two and create 4 tags for the tests, can you run get stats at the end, and test 16 delete task fails with error code 404 but it is actually passing considering the 17th test verify task deletion
 
 **Changes Made:**
+
 - Created 6 diverse tasks with different statuses and due dates
 - Created 4 tags (urgent, bug, feature, documentation) using loops
 - Added arrays to store multiple task IDs and tag names
@@ -53,9 +59,11 @@ Created `test_api.sh` with:
 - Fixed delete test logic (initially implemented double delete for 404 test)
 
 ### Request 3: Revert Delete Test
+
 **User:** can you undo the delete change
 
 **Changes Made:**
+
 - Reverted delete test back to single delete operation
 - Kept the final stats call and other enhancements
 
@@ -65,12 +73,13 @@ During testing, the delete operation returned 404. Analysis revealed:
 
 **Bug Location:** `src/controllers/taskController.ts:140`
 **Issue:** SQL query parameters were swapped
+
 ```typescript
 // Before (buggy):
-[wsId, taskId] // WHERE id = $1 AND workspace_id = $2
-
-// After (fixed):
-[taskId, wsId] // WHERE id = $1 AND workspace_id = $2
+[wsId, taskId][ // WHERE id = $1 AND workspace_id = $2
+  // After (fixed):
+  (taskId, wsId)
+]; // WHERE id = $1 AND workspace_id = $2
 ```
 
 **Root Cause:** The query was checking `WHERE id = workspace_id AND workspace_id = task_id` instead of the correct parameter mapping.
@@ -80,6 +89,7 @@ During testing, the delete operation returned 404. Analysis revealed:
 **User:** awesome, this was worked, can you add the instructions for this temporary test file to the readME of the project
 
 **Changes Made:**
+
 - Added comprehensive "API Testing Script" section to README.md
 - Included usage instructions, feature list, and capabilities
 - Documented the script's dual purpose as testing tool and API documentation
@@ -130,6 +140,7 @@ The final `test_api.sh` script includes:
 ## Outcome
 
 The conversation resulted in a robust, comprehensive API testing tool that:
+
 - Tests all endpoints thoroughly
 - Demonstrates proper API usage
 - Serves as living documentation

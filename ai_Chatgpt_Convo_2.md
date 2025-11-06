@@ -48,41 +48,41 @@ Structured logs (JSON), request ID if convenient.
 Database design I created:
 
 CREATE TYPE "status" AS ENUM (
-  'todo',
-  'in_progress',
-  'done'
+'todo',
+'in_progress',
+'done'
 );
 
 CREATE TABLE "workspaces" (
-  "id" integer PRIMARY KEY,
-  "name" varchar NOT NULL
+"id" integer PRIMARY KEY,
+"name" varchar NOT NULL
 );
 
 CREATE TABLE "tasks" (
-  "id" integer PRIMARY KEY,
-  "title" varchar NOT NULL,
-  "description" text NOT NULL,
-  "status" status NOT NULL,
-  "due_date" timestamp,
-  "created_by" integer NOT NULL
+"id" integer PRIMARY KEY,
+"title" varchar NOT NULL,
+"description" text NOT NULL,
+"status" status NOT NULL,
+"due_date" timestamp,
+"created_by" integer NOT NULL
 );
 
 CREATE TABLE "tag" (
-  "id" integer PRIMARY KEY,
-  "name" varchar NOT NULL,
-  "workspace_id" integer NOT NULL
+"id" integer PRIMARY KEY,
+"name" varchar NOT NULL,
+"workspace_id" integer NOT NULL
 );
 
 CREATE TABLE "TaskTags" (
-  "id" integer PRIMARY KEY,
-  "tag_id" integer,
-  "task_id" integer
+"id" integer PRIMARY KEY,
+"tag_id" integer,
+"task_id" integer
 );
 
 CREATE TABLE "APIKey" (
-  "id" integer PRIMARY KEY,
-  "workspace_id" integer NOT NULL,
-  "APIKey" integer NOT NULL
+"id" integer PRIMARY KEY,
+"workspace_id" integer NOT NULL,
+"APIKey" integer NOT NULL
 );
 
 CREATE UNIQUE INDEX ON "tag" ("name", "workspace_id");
@@ -115,25 +115,26 @@ Tag + TaskTags → many-to-many relationship
 This aligns very well with the prompt.
 
 ⚠️ Issues & Improvements
+
 1. APIKey table
-Current:
-CREATE TABLE "APIKey" (
-    "id" integer PRIMARY KEY,
-    "workspace_id" integer NOT NULL,
-    "APIKey" integer NOT NULL
-);
-Problems:
-APIKey should be text, not integer — API keys are usually strings (UUIDs or random hashes).
+   Current:
+   CREATE TABLE "APIKey" (
+   "id" integer PRIMARY KEY,
+   "workspace_id" integer NOT NULL,
+   "APIKey" integer NOT NULL
+   );
+   Problems:
+   APIKey should be text, not integer — API keys are usually strings (UUIDs or random hashes).
 
 You're referencing "workspace_id" in "tasks"."created_by", but "created_by" should reference APIKey.id, not workspace_id.
 
 Fix:
 CREATE TABLE "api_keys" (
-  "id" SERIAL PRIMARY KEY,
-  "workspace_id" INTEGER NOT NULL REFERENCES "workspaces" ("id") ON DELETE CASCADE,
-  "key_hash" TEXT NOT NULL, -- store hashed API key (never plaintext)
-  "created_at" TIMESTAMP DEFAULT now(),
-  UNIQUE ("workspace_id", "key_hash")
+"id" SERIAL PRIMARY KEY,
+"workspace_id" INTEGER NOT NULL REFERENCES "workspaces" ("id") ON DELETE CASCADE,
+"key_hash" TEXT NOT NULL, -- store hashed API key (never plaintext)
+"created_at" TIMESTAMP DEFAULT now(),
+UNIQUE ("workspace_id", "key_hash")
 );
 ✅ Justification:
 
@@ -144,15 +145,14 @@ Multiple keys per workspace = flexibility for rotation or scoped access.
 Cascade delete keeps data consistent if a workspace is removed.
 
 2. tasks foreign key
-Current:
-ALTER TABLE "tasks" ADD FOREIGN KEY ("created_by") REFERENCES "APIKey" ("workspace_id");
-Problem:
-This says: "the created_by field points to a workspace_id inside the APIKey table" — which doesn't make sense. It should point to the API key record itself, not the workspace.
+   Current:
+   ALTER TABLE "tasks" ADD FOREIGN KEY ("created_by") REFERENCES "APIKey" ("workspace_id");
+   Problem:
+   This says: "the created_by field points to a workspace_id inside the APIKey table" — which doesn't make sense. It should point to the API key record itself, not the workspace.
 
 Fix:
 ALTER TABLE "tasks"
-  ADD FOREIGN KEY ("created_by") REFERENCES "api_keys" ("id") ON DELETE SET NULL;
-3. Workspace connection for tasks and tags
+ADD FOREIGN KEY ("created_by") REFERENCES "api_keys" ("id") ON DELETE SET NULL; 3. Workspace connection for tasks and tags
 Tasks and tags should both explicitly belong to a workspace.
 Currently, tags do, but tasks do not.
 
@@ -164,14 +164,14 @@ ALTER TABLE "tasks" ADD COLUMN "workspace_id" INTEGER NOT NULL REFERENCES "works
 Prevents cross-workspace leaks — ensures filtering and permissions stay scoped.
 
 4. TaskTags Table
-Current:
-CREATE TABLE "TaskTags" (
-    "id" integer PRIMARY KEY,
-    "tag_id" integer,
-    "task_id" integer
-);
-Suggestions:
-Rename to lowercase: task_tags (snake_case is standard)
+   Current:
+   CREATE TABLE "TaskTags" (
+   "id" integer PRIMARY KEY,
+   "tag_id" integer,
+   "task_id" integer
+   );
+   Suggestions:
+   Rename to lowercase: task_tags (snake_case is standard)
 
 Make (tag_id, task_id) unique to avoid duplicate attachments.
 
@@ -179,84 +179,82 @@ You don't really need an auto id column unless you plan to reference this table 
 
 Fix:
 CREATE TABLE "task_tags" (
-  "tag_id" INTEGER NOT NULL REFERENCES "tag" ("id") ON DELETE CASCADE,
-  "task_id" INTEGER NOT NULL REFERENCES "tasks" ("id") ON DELETE CASCADE,
-  PRIMARY KEY ("tag_id", "task_id")
-);
-5. tag table
+"tag_id" INTEGER NOT NULL REFERENCES "tag" ("id") ON DELETE CASCADE,
+"task_id" INTEGER NOT NULL REFERENCES "tasks" ("id") ON DELETE CASCADE,
+PRIMARY KEY ("tag_id", "task_id")
+); 5. tag table
 Your design here is solid — just ensure consistency with naming and add timestamps if you want basic auditability.
 
 Fix (optional improvements):
 CREATE TABLE "tags" (
-  "id" SERIAL PRIMARY KEY,
-  "name" VARCHAR NOT NULL,
-  "workspace_id" INTEGER NOT NULL REFERENCES "workspaces" ("id") ON DELETE CASCADE,
-  "created_at" TIMESTAMP DEFAULT now(),
-  UNIQUE ("name", "workspace_id")
-);
-6. Other Enhancements
-Feature	Suggestion	Reason
-Soft delete for tasks	Add "deleted_at" TIMESTAMP NULL	Enables soft delete for /DELETE endpoint
-Timestamps	Add created_at, updated_at columns	Helps with analytics and debugging
-Indexes	Add index on status, due_date, workspace_id	Speeds up filtering and pagination
-Key rotation	Have is_active boolean in api_keys	Allows invalidating old keys easily
+"id" SERIAL PRIMARY KEY,
+"name" VARCHAR NOT NULL,
+"workspace_id" INTEGER NOT NULL REFERENCES "workspaces" ("id") ON DELETE CASCADE,
+"created_at" TIMESTAMP DEFAULT now(),
+UNIQUE ("name", "workspace_id")
+); 6. Other Enhancements
+Feature Suggestion Reason
+Soft delete for tasks Add "deleted_at" TIMESTAMP NULL Enables soft delete for /DELETE endpoint
+Timestamps Add created_at, updated_at columns Helps with analytics and debugging
+Indexes Add index on status, due_date, workspace_id Speeds up filtering and pagination
+Key rotation Have is_active boolean in api_keys Allows invalidating old keys easily
 ✅ Example of the Final Schema
 Here's how your refined schema could look:
 
 CREATE TYPE status AS ENUM ('todo', 'in_progress', 'done');
 
 CREATE TABLE workspaces (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR NOT NULL
+id SERIAL PRIMARY KEY,
+name VARCHAR NOT NULL
 );
 
 CREATE TABLE api_keys (
-  id SERIAL PRIMARY KEY,
-  workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-  key_hash TEXT NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT now(),
-  UNIQUE (workspace_id, key_hash)
+id SERIAL PRIMARY KEY,
+workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+key_hash TEXT NOT NULL,
+is_active BOOLEAN DEFAULT TRUE,
+created_at TIMESTAMP DEFAULT now(),
+UNIQUE (workspace_id, key_hash)
 );
 
 CREATE TABLE tasks (
-  id SERIAL PRIMARY KEY,
-  workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-  title VARCHAR NOT NULL,
-  description TEXT NOT NULL,
-  status status NOT NULL DEFAULT 'todo',
-  due_date TIMESTAMP,
-  created_by INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
-  deleted_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
+id SERIAL PRIMARY KEY,
+workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+title VARCHAR NOT NULL,
+description TEXT NOT NULL,
+status status NOT NULL DEFAULT 'todo',
+due_date TIMESTAMP,
+created_by INTEGER REFERENCES api_keys(id) ON DELETE SET NULL,
+deleted_at TIMESTAMP,
+created_at TIMESTAMP DEFAULT now(),
+updated_at TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE tags (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR NOT NULL,
-  workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-  created_at TIMESTAMP DEFAULT now(),
-  UNIQUE (name, workspace_id)
+id SERIAL PRIMARY KEY,
+name VARCHAR NOT NULL,
+workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+created_at TIMESTAMP DEFAULT now(),
+UNIQUE (name, workspace_id)
 );
 
 CREATE TABLE task_tags (
-  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
-  task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-  PRIMARY KEY (tag_id, task_id)
+tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+task_id INTEGER NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+PRIMARY KEY (tag_id, task_id)
 );
 
 CREATE INDEX idx_tasks_status ON tasks(status);
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 CREATE INDEX idx_tasks_workspace_id ON tasks(workspace_id);
 ✅ Summary of Key Fixes
-Category	Change	Why
-Security	Hash API keys	Never store plaintext
-Data Integrity	Fixed incorrect foreign key (created_by)	Ensure proper relation
-Workspace Scoping	Added workspace_id to tasks	Prevent cross-tenant leaks
-Duplication Prevention	Added composite PK on task_tags	Avoid repeated tag-task pairs
-Soft Delete	Added deleted_at	For safe deletions
-Performance	Added indexes	For filtering & pagination
+Category Change Why
+Security Hash API keys Never store plaintext
+Data Integrity Fixed incorrect foreign key (created_by) Ensure proper relation
+Workspace Scoping Added workspace_id to tasks Prevent cross-tenant leaks
+Duplication Prevention Added composite PK on task_tags Avoid repeated tag-task pairs
+Soft Delete Added deleted_at For safe deletions
+Performance Added indexes For filtering & pagination
 Would you like me to include a quick ER diagram (entity-relationship) version of this so you can visualize the relationships before implementing it in code?
 
 ---
@@ -286,7 +284,7 @@ You can infer it through joins — but there are practical and architectural dow
 🧩 #2 – The created_by foreign key
 Your current approach
 ALTER TABLE "tasks"
-  ADD FOREIGN KEY ("created_by") REFERENCES "APIKey" ("workspace_id");
+ADD FOREIGN KEY ("created_by") REFERENCES "APIKey" ("workspace_id");
 This means:
 
 "The value in tasks.created_by should match a workspace_id that exists inside the APIKey table."
@@ -312,7 +310,7 @@ If keys are rotated or disabled, you can still audit their activity.
 
 It allows proper joins like:
 
-SELECT * FROM tasks t
+SELECT \* FROM tasks t
 JOIN api_keys k ON t.created_by = k.id
 WHERE k.workspace_id = 123;
 🧱 #3 – Why tasks.workspace_id is still needed
@@ -337,13 +335,13 @@ then the DB itself ensures every task belongs to exactly one workspace, and you 
 ⚡ 2. Performance
 If you want to get all tasks for a workspace:
 
-SELECT * FROM tasks
+SELECT \* FROM tasks
 WHERE workspace_id = :id
 is fast and simple.
 
 If you didn't have that column, you'd need a join:
 
-SELECT t.*
+SELECT t.\*
 FROM tasks t
 JOIN api_keys k ON t.created_by = k.id
 WHERE k.workspace_id = :id;
@@ -375,15 +373,15 @@ We just have to make sure it's consistent.
 That's why, if you include both created_by and workspace_id, you can add a consistency check trigger or enforce it in your app logic:
 
 CHECK (workspace_id = (
-  SELECT workspace_id FROM api_keys WHERE id = created_by
+SELECT workspace_id FROM api_keys WHERE id = created_by
 ))
 In most small systems, ensuring it in the application layer (during creation) is enough.
 
 ✅ TL;DR Summary
-Concept	What it does	Why it matters
-created_by → api_keys.id	Tracks which API key created the task	Enables auditing and per-key accountability
-tasks.workspace_id	Explicitly ties task to a workspace	Ensures scoping, data integrity, and fast workspace queries
-Having both	Redundant but intentional	Balances data integrity with developer convenience
+Concept What it does Why it matters
+created_by → api_keys.id Tracks which API key created the task Enables auditing and per-key accountability
+tasks.workspace_id Explicitly ties task to a workspace Ensures scoping, data integrity, and fast workspace queries
+Having both Redundant but intentional Balances data integrity with developer convenience
 If you like, I can show you a short SQL snippet that enforces workspace consistency between tasks.workspace_id and api_keys.workspace_id — so a task can't be created by a key from another workspace. Would you like that?
 
 ---
@@ -397,9 +395,9 @@ Let's look closely at what "tasks do not need to be unique per workspace" means 
 🔹 What You Mean by "not unique per workspace"
 You're saying that two workspaces can have tasks with the same title, like:
 
-workspace_id	title
-1	"Fix login bug"
-2	"Fix login bug"
+workspace_id title
+1 "Fix login bug"
+2 "Fix login bug"
 That's totally fine — uniqueness of task names isn't required per workspace.
 But uniqueness of ownership still is.
 
@@ -454,10 +452,10 @@ which prevents data from "bleeding" between workspaces.
 ⚡ 3. Performance and Query Simplicity
 For every "list tasks by workspace" or "generate stats" operation, you'll run something like:
 
-SELECT * FROM tasks WHERE workspace_id = $1;
+SELECT \* FROM tasks WHERE workspace_id = $1;
 Without that column, you'd have to:
 
-SELECT t.*
+SELECT t.\*
 FROM tasks t
 JOIN api_keys k ON t.created_by = k.id
 WHERE k.workspace_id = $1;

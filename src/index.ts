@@ -2,15 +2,14 @@ import app from "./server";
 import dotenv from "dotenv";
 import { connectToDB } from "./db/connection";
 
-dotenv.config()
+dotenv.config();
 
 async function startServer() {
+  await connectToDB();
 
-  await connectToDB()
+  let port = process.env.PORT || 5000;
 
-  let port = process.env.PORT || 5000
-
-  app.listen(port, () => console.log(`Server is running on port ${process.env.PORT}`))
+  app.listen(port, () => console.log(`Server is running on port ${port}`));
 }
 
-startServer()
+startServer();

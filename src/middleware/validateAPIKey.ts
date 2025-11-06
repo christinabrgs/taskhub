@@ -22,7 +22,7 @@ export async function validateApiKey(
     const key = crypto.createHash("sha256").update(apiKey).digest("hex"); // using lower saltOrRounds value to ensure faster processing
     // Find API key in DB
     const apiKeyRecord = await db.query(
-      `SELECT id, workspace_id FROM api_keys WHERE key = $1 AND workspace_id = $2`,
+      "SELECT id, workspace_id FROM api_keys WHERE key = $1 AND workspace_id = $2",
       [key, wsId],
     );
 

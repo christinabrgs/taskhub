@@ -99,7 +99,7 @@ Create a `.env` file:
 
 ```
 PORT=5000
-DB_HOST=localhost
+DB_HOST=db
 DB_USER=postgres
 DB_PASSWORD=password
 DB_NAME=taskhub
@@ -116,15 +116,8 @@ cd taskhub
 # Install dependencies
 npm install
 
-# Start Database in Docker Container
-docker-compose up
-
-# Apply schema
-# Option 1: Run SQL in src/db/taskhub.sql
-# Option 2: Use pgAdmin (admin@admin.com / admin)
-
-# Start server
-npm run dev
+# Start all services (API + Database + pgAdmin) in Docker
+docker-compose up --build
 
 # Run tests
 npm run test
@@ -132,6 +125,26 @@ npm run test
 
 API available at **<http://localhost:5000>**
 pgAdmin available at **<http://localhost:5050>**
+
+### Code Quality Tools
+
+ESLint and Prettier are configured for consistent code formatting:
+
+```bash
+# Check for linting issues
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+
+# Format all files with Prettier
+npm run format
+
+# Check if files are properly formatted
+npm run format:check
+```
+
+**Update 11/05:** The Docker setup handles all services including the API, database, and pgAdmin. No need to run the server separately when using Docker.
 
 ---
 
@@ -143,15 +156,11 @@ pgAdmin available at **<http://localhost:5050>**
 
   Request Body:
 
-  
-
   ```
   {
   "name": "My Workspace"
   }
   ```
-
-  
 
 - `POST /workspaces/:wsId/apikeys` – Generate an API key
 
@@ -209,7 +218,7 @@ pgAdmin available at **<http://localhost:5050>**
 
 Jest & SuperTest is configured for unit and integration testing.
 
-Update: 11.03 you can now run tests with "npm run dev"
+Update: 11.03 you can now run tests with "npm run test"
 
 ### API Testing Script
 
@@ -248,10 +257,6 @@ If the project evolved toward TypeScript-native queries, I would implement Drizz
 - Implement invalidation for keys
 - Add Drizzle migrations
 - Introduce consistent error constants
-
-
-
-- add API service back to docker-compose file
 
 ---
 

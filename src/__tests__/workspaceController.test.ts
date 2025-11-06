@@ -14,7 +14,7 @@ import { DatabaseError } from "pg";
 
 describe("Workspace Controller", () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.clearAllMocks();
     setupApiKeyValidation();
   });
 
@@ -78,8 +78,8 @@ describe("Workspace Controller", () => {
     });
 
     it("should return 404 for non-existent workspace", async () => {
-      const err = new DatabaseError("fk constraint error I guess", 69, "error")
-      err.code = '23503'
+      const err = new DatabaseError("fk constraint error I guess", 69, "error");
+      err.code = "23503";
       mockQuery.mockRejectedValueOnce(err);
 
       const response = await request(app).post("/workspaces/999/apikeys");
@@ -172,10 +172,9 @@ describe("Workspace Controller", () => {
       expect(response.body.overdueTasks).toBe("2");
     });
 
-
     it("should return 404 for non-existent workspace", async () => {
-      const err = new DatabaseError("fk constraint error I guess", 69, "error")
-      err.code = '23503'
+      const err = new DatabaseError("fk constraint error I guess", 69, "error");
+      err.code = "23503";
       mockQuery.mockRejectedValueOnce(err);
 
       const response = await request(app).post("/workspaces/999/apikeys");

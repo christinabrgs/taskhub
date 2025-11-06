@@ -11,10 +11,10 @@ const workspaceSchema = z.object({
 
 async function createWorkspace(req: Request, res: Response) {
   try {
-    const safeParse = workspaceSchema.safeParse(req.body)
+    const safeParse = workspaceSchema.safeParse(req.body);
 
     if (!safeParse.success) {
-      return res.status(400).json({ error: safeParse.error.issues })
+      return res.status(400).json({ error: safeParse.error.issues });
     }
 
     const result = await db.query(
@@ -72,15 +72,12 @@ async function getStatsForWorkspace(_req: Request, res: Response) {
       [wsId],
     );
 
-    res
-      .status(200)
-      .json({
-        stats: countStatus.rows,
-        topTags: topTags.rows,
-        overdueTasks: overdueTasks.rows[0].count,
-      });
+    res.status(200).json({
+      stats: countStatus.rows,
+      topTags: topTags.rows,
+      overdueTasks: overdueTasks.rows[0].count,
+    });
   } catch (error) {
-
     if (error instanceof DatabaseError && error.code === "23503") {
       return res.status(404).json({ error: "Workspace not found" });
     }

@@ -38,12 +38,19 @@ async function createTask(req: Request, res: Response) {
     const safeParse = taskSchema.safeParse(req.body);
 
     if (!safeParse.success) {
-      return res.status(400).json({ error: safeParse.error.issues })
+      return res.status(400).json({ error: safeParse.error.issues });
     }
 
     const result = await db.query(
       "INSERT INTO tasks (title, description, status, due_date, created_by, workspace_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [safeParse.data.title, safeParse.data.description, safeParse.data.status, safeParse.data.dueDate, apiKey, wsId],
+      [
+        safeParse.data.title,
+        safeParse.data.description,
+        safeParse.data.status,
+        safeParse.data.dueDate,
+        apiKey,
+        wsId,
+      ],
     );
     res.status(201).json({ task: result.rows[0] });
   } catch (error) {
@@ -53,13 +60,13 @@ async function createTask(req: Request, res: Response) {
 }
 
 async function getTasks(req: Request, res: Response) {
-  const safeParse = taskListSchema.safeParse(req.query)
+  const safeParse = taskListSchema.safeParse(req.query);
 
   if (!safeParse.success) {
-    return res.status(400).json({ error: safeParse.error.issues })
+    return res.status(400).json({ error: safeParse.error.issues });
   }
 
-  const { status, due_before, q, cursor, limit, tag } = safeParse.data
+  const { status, due_before, q, cursor, limit, tag } = safeParse.data;
 
   const wsId = res.locals.wsId;
 
@@ -133,13 +140,13 @@ async function deleteTask(req: Request, res: Response) {
   const taskId = Number(req.params.taskId);
 
   try {
-    const rows = await db.query("UPDATE tasks SET deleted_at = NOW() WHERE id = $1 AND workspace_id = $2", [
-      taskId,
-      wsId
-    ]);
+    const rows = await db.query(
+      "UPDATE tasks SET deleted_at = NOW() WHERE id = $1 AND workspace_id = $2",
+      [taskId, wsId],
+    );
 
     if (!rows.rowCount) {
-      return res.status(400).json({ error: "Delete failed" })
+      return res.status(400).json({ error: "Delete failed" });
     }
     res.status(204).send();
   } catch (error) {
@@ -155,7 +162,7 @@ async function updateTask(req: Request, res: Response) {
   const safeParse = partialTaskUpdateSchema.safeParse(req.body);
 
   if (!safeParse.success) {
-    return res.status(400).json({ error: safeParse.error.issues })
+    return res.status(400).json({ error: safeParse.error.issues });
   }
 
   const fields = [];
@@ -194,13 +201,13 @@ async function attachTagToTask(req: Request, res: Response) {
   const safeParse = tagSchema.safeParse({ name });
 
   if (!safeParse.success) {
-    return res.status(400).json({ error: safeParse.error.issues })
+    return res.status(400).json({ error: safeParse.error.issues });
   }
 
   try {
     // check if tag exists, if it doesn't create it
     const tagQuery = await db.query(
-      `INSERT INTO tags (name, workspace_id) VALUES ($1, $2) ON CONFLICT (name, workspace_id) DO UPDATE SET name = EXCLUDED.name RETURNING *;`,
+      "INSERT INTO tags (name, workspace_id) VALUES ($1, $2) ON CONFLICT (name, workspace_id) DO UPDATE SET name = EXCLUDED.name RETURNING *;",
       [safeParse.data.name, wsId],
     );
 
@@ -211,7 +218,7 @@ async function attachTagToTask(req: Request, res: Response) {
     const tag = tagQuery.rows[0];
 
     const result = await db.query(
-      `INSERT INTO task_tags (tag_id, task_id) VALUES ($1, $2) ON CONFLICT (tag_id, task_id) DO UPDATE SET tag_id = EXCLUDED.tag_id RETURNING *;`,
+      "INSERT INTO task_tags (tag_id, task_id) VALUES ($1, $2) ON CONFLICT (tag_id, task_id) DO UPDATE SET tag_id = EXCLUDED.tag_id RETURNING *;",
       [tag.id, taskId],
     );
 
@@ -225,7 +232,7 @@ async function attachTagToTask(req: Request, res: Response) {
 // Routers
 
 const taskRouter = Router({ mergeParams: true });
-taskRouter.use(validateApiKey)
+taskRouter.use(validateApiKey);
 
 taskRouter.post("/", createTask);
 taskRouter.get("/", getTasks);

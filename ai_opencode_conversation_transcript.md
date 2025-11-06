@@ -1,26 +1,31 @@
 # TaskHub Tag Filter Fix - Conversation Transcript
 
 ## Initial Issue
+
 **User:** @src/controllers/taskController.ts from lines 95 to 99 I have a tag filter but there is an issue with applying this filter to the query. It is returning only the defined tag in the filter but not the other tags associated with the same task. We want to return the task associated with the filtered tag and all other tags associated to that same task
 
 **Assistant:** [Analyzed the code and provided initial solution using EXISTS clause]
 
 ## Exploring Better Solutions
+
 **User:** is there a better way to do this?
 
 **Assistant:** [Explored database schema and provided 3 better options: CTE, Window Functions, and Separate Tag Filtering. Recommended Option 1 (CTE) as best balance]
 
 ## Breaking Down Option 1
+
 **User:** can you break down what is happening in option 1
 
 **Assistant:** [Provided detailed step-by-step breakdown of how the CTE approach works, explaining the problem with current filtering and how the subquery solution separates filtering logic from aggregation logic]
 
 ## Implementation
+
 **User:** can you implement this query in my file
 
 **Assistant:** [Implemented the subquery approach in taskController.ts, verified with build command, confirmed syntax is correct]
 
 ## Current Request
+
 **User:** can you create a transcript file of this conversation
 
 ---
@@ -36,9 +41,9 @@
 ```typescript
 // Before (problematic):
 if (tag) {
-  query += ` AND tags.name = $${index}`
-  values.push(tag)
-  index++
+  query += ` AND tags.name = $${index}`;
+  values.push(tag);
+  index++;
 }
 
 // After (fixed):
@@ -48,9 +53,9 @@ if (tag) {
     FROM task_tags tt
     JOIN tags t ON tt.tag_id = t.id
     WHERE t.name = $${index}
-  )`
-  values.push(tag)
-  index++
+  )`;
+  values.push(tag);
+  index++;
 }
 ```
 

@@ -5,6 +5,9 @@ import prettierConfig from "eslint-config-prettier";
 
 export default [
   {
+    ignores: ["dist/**", "node_modules/**", "*.md", "docker-compose.yml", ".env"],
+  },
+  {
     files: ["**/*.ts"],
 
     languageOptions: {
@@ -22,8 +25,8 @@ export default [
       ...prettierConfig.rules,
       "@typescript-eslint/no-unused-vars": "warn",
       "no-console": "warn",
-      "semi": ["error", "always"],
-      "quotes": ["error", "double"],
+      semi: ["error", "always"],
+      quotes: ["error", "double"],
       "prettier/prettier": "error",
     },
   },

@@ -60,7 +60,11 @@ export const createMockImplementation = (
 ) => {
   return (query: string, params: any[]) => {
     // First, handle API key validation
-    if (query.includes("SELECT id, workspace_id FROM api_keys") && mockHashedApiKey === params[0] && mockWorkspaceId === params[1]) {
+    if (
+      query.includes("SELECT id, workspace_id FROM api_keys") &&
+      mockHashedApiKey === params[0] &&
+      mockWorkspaceId === params[1]
+    ) {
       return Promise.resolve({
         rows: [{ id: mockApiKeyId, workspace_id: mockWorkspaceId }],
         rowCount: 1,
@@ -68,7 +72,10 @@ export const createMockImplementation = (
     }
 
     // Handle workspace validation
-    if (query.includes("SELECT * FROM workspaces WHERE id = $1") && params[0] === mockWorkspaceId) {
+    if (
+      query.includes("SELECT * FROM workspaces WHERE id = $1") &&
+      params[0] === mockWorkspaceId
+    ) {
       return Promise.resolve({
         rows: [mockWorkspace],
         rowCount: 1,
